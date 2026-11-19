@@ -85,7 +85,7 @@
       const search = new SearchAddon.SearchAddon();
       term.loadAddon(fit);
       term.loadAddon(search);
-      term.loadAddon(new WebLinksAddon.WebLinksAddon((ev, uri) => { if (ev.ctrlKey || ev.metaKey) window.open(uri); }));
+      term.loadAddon(new WebLinksAddon.WebLinksAddon((ev, uri) => { if (ev.ctrlKey || ev.metaKey) nova.openExternal(uri); }));
 
       const tab = { id: tmpId, info: { ...meta, status: 'connecting' }, title: meta.title, term, fit, search, pane, broadcast: true, sftpPath: null, gotData: false };
       const tabEl = html(`<div class="tab" draggable="true">
@@ -126,12 +126,12 @@
       term.onBinary((data) => this.input(tab, data));
       term.onResize(({ cols, rows }) => { if (!tab.id.startsWith('pending-')) nova.resize(tab.id, cols, rows); });
       term.onSelectionChange(() => {
-        if (App.settings.copyOnSelect && term.hasSelection()) navigator.clipboard.writeText(term.getSelection()).catch(() => {});
+        if (App.settings.copyOnSelect && term.hasSelection()) nova.clipboard.writeText(term.getSelection()).catch(() => {});
       });
       term.attachCustomKeyEventHandler((e) => this.keyHandler(tab, e));
       pane.addEventListener('contextmenu', (e) => { e.preventDefault(); this.termMenu(tab, e.clientX, e.clientY); });
       pane.addEventListener('auxclick', (e) => {
-        if (e.button === 1) { e.preventDefault(); navigator.clipboard.readText().then((t) => t && term.paste(t)); }
+        if (e.button === 1) { e.preventDefault(); nova.clipboard.readText().then((t) => t && term.paste(t)); }
       });
 
       if (activate) this.activate(tmpId); else { pane.classList.add('active'); this.fit(tab); pane.classList.remove('active'); }
@@ -351,10 +351,10 @@
       if (e.type !== 'keydown') return true;
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
-      if (mod && e.shiftKey && k === 'c') { if (tab.term.hasSelection()) navigator.clipboard.writeText(tab.term.getSelection()); return false; }
-      if (mod && e.shiftKey && k === 'v') { navigator.clipboard.readText().then((t) => t && tab.term.paste(t)); return false; }
-      if (e.metaKey && k === 'c' && tab.term.hasSelection()) { navigator.clipboard.writeText(tab.term.getSelection()); return false; }
-      if (e.metaKey && k === 'v') { navigator.clipboard.readText().then((t) => t && tab.term.paste(t)); return false; }
+      if (mod && e.shiftKey && k === 'c') { if (tab.term.hasSelection()) nova.clipboard.writeText(tab.term.getSelection()); return false; }
+      if (mod && e.shiftKey && k === 'v') { nova.clipboard.readText().then((t) => t && tab.term.paste(t)); return false; }
+      if (e.metaKey && k === 'c' && tab.term.hasSelection()) { nova.clipboard.writeText(tab.term.getSelection()); return false; }
+      if (e.metaKey && k === 'v') { nova.clipboard.readText().then((t) => t && tab.term.paste(t)); return false; }
       if (mod && e.shiftKey && k === 'f') { this.openSearch(tab); return false; }
       if (mod && e.shiftKey && ['t', 'w', 'k', 'n', 'l'].includes(k)) return false; // gestite globalmente
       if (e.ctrlKey && k === 'tab') return false;
@@ -366,8 +366,8 @@
     termMenu(tab, x, y) {
       const sel = tab.term.getSelection();
       contextMenu(x, y, [
-        { text: 'Copia', icon: 'copy', kbd: 'Ctrl+Shift+C', disabled: !sel, action: () => navigator.clipboard.writeText(sel) },
-        { text: 'Incolla', icon: 'clipboard', kbd: 'Ctrl+Shift+V', action: () => navigator.clipboard.readText().then((t) => t && tab.term.paste(t)) },
+        { text: 'Copia', icon: 'copy', kbd: 'Ctrl+Shift+C', disabled: !sel, action: () => nova.clipboard.writeText(sel) },
+        { text: 'Incolla', icon: 'clipboard', kbd: 'Ctrl+Shift+V', action: () => nova.clipboard.readText().then((t) => t && tab.term.paste(t)) },
         { text: 'Seleziona tutto', icon: 'layers', action: () => tab.term.selectAll() },
         { text: 'Cerca…', icon: 'search', kbd: 'Ctrl+Shift+F', action: () => this.openSearch(tab) },
         { text: 'Pulisci schermo', icon: 'refresh', action: () => tab.term.clear() },

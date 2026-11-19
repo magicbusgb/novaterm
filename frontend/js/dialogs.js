@@ -164,10 +164,10 @@
       dz.addEventListener('click', pick);
       dz.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dz.classList.add('over'); });
       dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-      dz.addEventListener('drop', (e) => {
-        e.preventDefault(); e.stopPropagation(); dz.classList.remove('over');
-        const f = e.dataTransfer.files[0];
-        if (f) fromPath(nova.pathForFile(f));
+      dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('over'); });
+      m.el.addEventListener('nova-file-drop', (e) => {
+        e.stopPropagation(); dz.classList.remove('over');
+        if (e.detail.paths[0]) fromPath(e.detail.paths[0]);
       });
       m.foot.addEventListener('click', async (e) => {
         const a = e.target.closest('[data-a]')?.dataset.a;

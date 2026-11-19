@@ -165,7 +165,7 @@
         const bar = html(`<div class="code-actions"><button data-a="copy">${icon('copy')}Copia</button><button data-a="paste" title="Incolla nel terminale attivo (senza Invio)">${icon('terminal')}Al terminale</button></div>`);
         bar.addEventListener('click', (e) => {
           const a = e.target.closest('[data-a]')?.dataset.a;
-          if (a === 'copy') { navigator.clipboard.writeText(code); toast('Copiato', 'ok', 1200); }
+          if (a === 'copy') { nova.clipboard.writeText(code); toast('Copiato', 'ok', 1200); }
           if (a === 'paste') {
             const t = App.Terms.active();
             if (!t) return toast('Nessun terminale attivo', 'warn');
@@ -233,7 +233,7 @@
     },
 
     toolCard(ev) {
-      if (ev.parent) return; // strumenti dei sotto-agenti: non mostrati
+      if (ev.parent || ev.name === 'ToolSearch') return; // strumenti interni/dei sotto-agenti: non mostrati
       const d = describeTool(ev.name, ev.input);
       const card = html(`<div class="tool-card running">
           <div class="tc-head"><div class="tc-ic">${icon(d.ic)}</div>

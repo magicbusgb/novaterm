@@ -131,7 +131,7 @@
         e && { text: e.type === 'dir' || e.linkToDir ? 'Apri' : 'Scarica…', icon: e.type === 'dir' ? 'folder' : 'download', action: () => this.open(name) },
         e && e.type !== 'dir' && { text: 'Analizza con Claude', icon: 'sparkles', action: () => App.Claude.quickAsk(`Leggi il file remoto \`${full}\` sul terminale ${this.termId} (usa read_remote_file) e spiegami cosa contiene, segnalando eventuali problemi.`) },
         e && { text: 'Rinomina…', icon: 'edit', action: () => this.rename(name) },
-        { text: 'Copia percorso', icon: 'clipboard', action: () => { navigator.clipboard.writeText(full); toast('Percorso copiato', 'ok', 1500); } },
+        { text: 'Copia percorso', icon: 'clipboard', action: () => { nova.clipboard.writeText(full); toast('Percorso copiato', 'ok', 1500); } },
         { text: 'Apri nel terminale (cd)', icon: 'terminal', action: () => { nova.write(this.termId, `cd ${JSON.stringify(e && (e.type === 'dir' || e.linkToDir) ? full : this.path)}\r`); App.Terms.active()?.term.focus(); } },
         '-',
         { text: 'Carica file qui…', icon: 'upload', action: () => this.upload() },
@@ -158,11 +158,11 @@
       });
       list.addEventListener('dragover', (e) => { if (this.termId && e.dataTransfer.types.includes('Files')) { e.preventDefault(); e.stopPropagation(); list.classList.add('drop'); } });
       list.addEventListener('dragleave', () => list.classList.remove('drop'));
-      list.addEventListener('drop', (e) => {
-        e.preventDefault(); e.stopPropagation();
+      list.addEventListener('drop', (e) => { e.preventDefault(); list.classList.remove('drop'); });
+      list.addEventListener('nova-file-drop', (e) => {
+        e.stopPropagation();
         list.classList.remove('drop');
-        const paths = [...e.dataTransfer.files].map((f) => nova.pathForFile(f)).filter(Boolean);
-        if (paths.length) this.upload(paths);
+        if (this.termId && e.detail.paths.length) this.upload(e.detail.paths);
       });
       $('#sftp-path').addEventListener('keydown', (e) => { if (e.key === 'Enter' && this.termId) this.load(e.target.value.trim()); });
       document.querySelector('.pane[data-pane="sftp"] .pane-actions').addEventListener('click', (e) => {

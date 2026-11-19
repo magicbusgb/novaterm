@@ -117,7 +117,7 @@
         { text: multi ? `Connetti ${ids.length} sessioni` : 'Connetti', icon: 'play', action: () => this.connectMany(ids) },
         !multi && { text: 'Modifica…', icon: 'edit', action: () => App.Dialogs.sessionEditor(s) },
         !multi && { text: 'Duplica', icon: 'copy', action: async () => { await nova.invoke('sessions:duplicate', id); this.set(await nova.invoke('sessions:list')); } },
-        !multi && s.type === 'ssh' && { text: 'Copia comando ssh', icon: 'clipboard', action: () => { navigator.clipboard.writeText(`ssh ${s.port !== 22 ? `-p ${s.port} ` : ''}${s.username ? s.username + '@' : ''}${s.host}`); toast('Copiato negli appunti', 'ok', 1500); } },
+        !multi && s.type === 'ssh' && { text: 'Copia comando ssh', icon: 'clipboard', action: () => { nova.clipboard.writeText(`ssh ${s.port !== 22 ? `-p ${s.port} ` : ''}${s.username ? s.username + '@' : ''}${s.host}`); toast('Copiato negli appunti', 'ok', 1500); } },
         '-',
         { text: 'Sposta nel gruppo…', icon: 'folder', action: () => this.moveToGroup(ids) },
         { text: multi ? 'Esporta selezionate in CSV' : 'Esporta in CSV', icon: 'fileExport', action: () => App.Dialogs.exportCsv(ids) },

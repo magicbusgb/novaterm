@@ -1,0 +1,17 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "NovaTerm",
+  "outputfilename": "NovaTerm",
+  "frontend:dir": "frontend",
+  "frontend:install": "",
+  "frontend:build": "",
+  "wailsjsdir": "",
+  "author": { "name": "magicbusgb" },
+  "info": {
+    "companyName": "NovaTerm",
+    "productName": "NovaTerm",
+    "productVersion": "2.0.0",
+    "copyright": "MIT",
+    "comments": "Client SSH moderno con SFTP, import CSV e Claude Code integrato"
+  }
+}

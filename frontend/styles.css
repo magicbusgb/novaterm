@@ -85,7 +85,7 @@ svg.ic { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none
 }
 .platform-darwin .titlebar { padding-left: 84px; }
 .titlebar button, .titlebar input, .titlebar .quick-connect { -webkit-app-region: no-drag; }
-.titlebar-spacer { width: 130px; flex: none; }
+.titlebar-spacer { width: 0; flex: none; }
 .platform-darwin .titlebar-spacer { width: 0; }
 .brand { display: flex; align-items: center; gap: 9px; flex: none; }
 .logo svg { width: 24px; height: 24px; display: block; filter: drop-shadow(0 3px 10px rgba(var(--accent-rgb), .45)); }

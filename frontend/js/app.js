@@ -186,10 +186,10 @@
 
   // drop globale di un CSV → import
   document.addEventListener('dragover', (e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); });
-  document.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const f = e.dataTransfer.files[0];
-    if (f && /\.(csv|tsv|txt)$/i.test(f.name)) App.Dialogs.importCsv(nova.pathForFile(f));
+  document.addEventListener('drop', (e) => e.preventDefault());
+  document.addEventListener('nova-file-drop', (e) => {
+    const p = e.detail.paths[0];
+    if (p && /\.(csv|tsv|txt)$/i.test(p)) App.Dialogs.importCsv(p);
   });
 
   // ------------------------------------------------------------ avvio

@@ -1,19 +1,28 @@
 # NovaTerm
 
-Client SSH/terminale desktop ispirato a MobaXterm, con interfaccia moderna, **import CSV** di host e password e **Claude Code integrato**, che esegue comandi direttamente sulle tue sessioni.
+Client SSH/terminale desktop ispirato a MobaXterm, scritto in **Go**, con interfaccia moderna, **import CSV** di host e password e **Claude Code integrato**, che esegue comandi direttamente sulle tue sessioni.
 
-Stack: Electron · xterm.js · ssh2 · node-pty · Claude Agent SDK.
+È un **unico eseguibile** (`NovaTerm.exe` su Windows, circa 14 MB): non servono Node.js, npm o un'installazione. L'interfaccia usa WebView2, già presente in Windows 10 e 11.
+
+Stack: Go · [Wails](https://wails.io) · golang.org/x/crypto/ssh · pkg/sftp · ConPTY / creack/pty · xterm.js.
+
+## Download e avvio
+
+1. Scarica `NovaTerm.exe` dalla pagina **Releases** del repository (o dagli artefatti dell'azione *Build*).
+2. Fai doppio clic. Al primo avvio Windows SmartScreen può avvisare che l'app non è firmata: *Ulteriori informazioni → Esegui comunque*.
+
+I dati vengono salvati in `%APPDATA%\NovaTerm` (Windows), `~/Library/Application Support/NovaTerm` (macOS) e `~/.config/NovaTerm` (Linux).
 
 ## Funzionalità
 
 **Terminale e sessioni**
-- Sessioni SSH (password, chiave privata con passphrase, ssh-agent, keyboard-interactive) e terminali locali, in schede
+- Sessioni SSH (password, chiave privata con passphrase, ssh-agent / agent OpenSSH di Windows, keyboard-interactive) e terminali locali (PowerShell su Windows), in schede
 - Albero delle sessioni con gruppi, ricerca, colori, selezione multipla, "connetti tutto il gruppo"
 - Connessione rapida `utente@host:porta` (Ctrl+K)
-- Browser **SFTP** laterale che segue la scheda attiva: navigazione, download, upload (anche drag & drop), rinomina, elimina, nuova cartella, "cd qui"
+- Browser **SFTP** laterale che segue la scheda attiva: navigazione, download, upload (anche drag & drop), rinomina, elimina, nuova cartella
 - **Multi-esecuzione**: digiti una volta, il testo va a tutte le schede selezionate
-- Ricerca nel terminale, copia alla selezione, incolla col tasto centrale, link cliccabili (Ctrl+clic), riconnessione con un clic
-- Verifica delle host key (TOFU + avviso se la chiave cambia)
+- Ricerca nel terminale, copia alla selezione, incolla col tasto centrale, riconnessione con un clic
+- Verifica delle host key (salvate al primo collegamento, avviso se cambiano)
 - Tema scuro/chiaro, 5 colori d'accento, 4 temi per il terminale
 
 **Import / export CSV**
@@ -21,9 +30,8 @@ Stack: Electron · xterm.js · ssh2 · node-pty · Claude Agent SDK.
 - Colonne: `name, group, host, port, username, password, private_key, passphrase, notes, type`
   (alias: nome, gruppo/cartella, hostname/ip/indirizzo, porta, utente/user/login, pass/pwd, chiave…)
 - La colonna host accetta anche `utente@host:porta`
-- Anteprima con selezione delle righe, rilevamento dei duplicati ed errori per riga
-- Export con o senza password; modello CSV scaricabile
-- Le password vengono cifrate con `safeStorage` di Electron (Portachiavi macOS, DPAPI su Windows, libsecret/kwallet su Linux)
+- Anteprima con selezione delle righe, duplicati ed errori per riga; export con o senza password
+- Le password sono cifrate con AES-256-GCM. La chiave è custodita nel portachiavi di sistema: Gestione credenziali su Windows, Portachiavi su macOS, Secret Service su Linux
 
 ```csv
 name,group,host,port,username,password,private_key,notes
@@ -34,52 +42,41 @@ Raspberry,Casa,pi@raspberrypi.local:22,,,raspberry,,
 
 **Claude Code integrato** (pannello a destra, Ctrl+Shift+K)
 
-Claude riceve un server MCP interno con questi strumenti sui terminali aperti:
+NovaTerm avvia il `claude` che hai installato e gli fornisce un server MCP locale, raggiungibile solo da `127.0.0.1` e protetto da un token. Il server offre questi strumenti sui terminali aperti:
 
 | Strumento | Cosa fa | Conferma |
 |---|---|---|
 | `list_terminals` | elenca le schede aperte e quella attiva | no |
 | `run_command` | esegue un comando su un canale SSH separato e restituisce stdout/stderr/exit code | sì |
 | `run_command_multi` | stesso comando su più server in parallelo | sì |
-| `send_to_terminal` | digita nella shell visibile e legge l'output (per `cd`, `sudo`, programmi interattivi) | sì |
+| `send_to_terminal` | digita nella shell visibile e legge l'output (`cd`, `sudo`, programmi interattivi) | sì |
 | `read_terminal` | legge lo schermo di una scheda | no |
 | `read_remote_file` / `write_remote_file` | legge e scrive file via SFTP | lettura no, scrittura sì |
 | `list_saved_sessions` / `open_session` | trova e apre sessioni salvate (Claude non vede mai le password) | apertura sì |
 
-- Ogni azione che modifica qualcosa mostra una scheda di approvazione con il **comando modificabile**, i server di destinazione e un avviso per i comandi pericolosi (`rm -rf`, `reboot`, `mkfs`…). Puoi scegliere Esegui (Ctrl+Invio), Consenti sempre (per la conversazione) o Rifiuta.
-- Auto-approvazione opzionale (icona scudo) solo per i comandi sui terminali.
-- Gli strumenti standard di Claude Code (Bash, Read, Edit, WebFetch…) restano disponibili sul computer locale, sempre con conferma; si possono disattivare dalle impostazioni.
-- Dal menu del terminale: "Chiedi a Claude sulla selezione", "Spiega l'output con Claude". Dal menu SFTP: "Analizza con Claude".
-- I blocchi di codice nelle risposte hanno "Copia" e "Al terminale" (incolla senza premere Invio).
-- Modello predefinito: Claude Opus 5.5. Modello ed effort si cambiano in Impostazioni → Claude Code.
+- La conferma avviene dentro NovaTerm, nello strumento stesso: mostra il **comando modificabile**, i server coinvolti e un avviso per i comandi pericolosi. Puoi scegliere Esegui (Ctrl+Invio), Consenti sempre o Rifiuta.
+- Gli strumenti standard di Claude Code (Bash, Edit, Web…) agiscono sul tuo computer e chiedono conferma nello stesso pannello quando Claude Code lo richiede. Si possono disattivare dalle impostazioni.
+- Auto-approvazione opzionale (icona scudo) per i soli comandi sui terminali.
 
-## Requisiti
+**Requisito per Claude:** Claude Code installato e con login già fatto. Per installarlo segui https://claude.com/claude-code, poi esegui `claude` una volta e completa il login. In alternativa inserisci una API key in Impostazioni → Claude Code. Se `claude` non è nel PATH, indica il percorso nelle impostazioni.
 
-- Node.js 18 o superiore (consigliato 22)
-- Su Linux, per compilare `node-pty` se non c'è un binario precompilato: `build-essential` e `python3`
-- Accesso a Claude: un login a Claude Code già fatto (`claude`, poi `/login`) **oppure** una API key Anthropic da inserire in Impostazioni → Claude Code
+## Compilare dai sorgenti
 
-## Avvio
+Servono Go 1.24 o superiore e la CLI di Wails:
 
 ```bash
-npm install
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.1
 ```
+
+Eseguibile Windows (si può compilare anche da Linux o macOS):
 
 ```bash
-npm start
+wails build -platform windows/amd64 -skipbindings -trimpath -ldflags "-s -w"
 ```
 
-## Creare l'installer
+Il file risultante è `build/bin/NovaTerm.exe`. Per macOS usa `-platform darwin/universal`; per Linux `-platform linux/amd64`, che richiede `libgtk-3-dev` e `libwebkit2gtk-4.0-dev`.
 
-```bash
-npm install --save-dev electron-builder
-```
-
-```bash
-npm run dist
-```
-
-Produce NSIS (Windows), DMG (macOS) o AppImage/deb (Linux) in `dist/`.
+L'azione GitHub **Build** (`.github/workflows/build.yml`) compila le tre piattaforme. Parte a mano (*Actions → Build → Run workflow*) oppure quando pubblichi un tag `v*`, e in quel caso allega gli eseguibili alla release.
 
 ## Scorciatoie
 
@@ -99,15 +96,15 @@ Produce NSIS (Windows), DMG (macOS) o AppImage/deb (Linux) in `dist/`.
 ## Struttura
 
 ```
-src/main/main.js        finestra Electron, IPC, dialoghi
-src/main/terminals.js   SSH (ssh2), terminale locale (node-pty), SFTP, exec per Claude
-src/main/claude.js      Claude Agent SDK, strumenti MCP, permessi
-src/main/store.js       sessioni, impostazioni, host key, cifratura
-src/main/csv.js         parsing ed export CSV
-src/renderer/           interfaccia (HTML/CSS/JS, nessun bundler)
+main.go               avvio Wails, finestra, dialoghi nativi
+app.go                ponte con l'interfaccia (Invoke, eventi, richieste)
+terminal.go           SSH, terminale locale, SFTP, esecuzione comandi per Claude
+platform_*.go         ConPTY (Windows) / pty (macOS, Linux), ssh-agent
+claude.go, tools.go   processo Claude Code, server MCP, strumenti, approvazioni
+store.go, csv.go      sessioni, impostazioni, cifratura, CSV
+frontend/             interfaccia (HTML/CSS/JS, xterm.js incluso in vendor/)
+devweb.go             modalità di test via browser (solo con -tags devweb)
 ```
-
-I dati si trovano nella cartella utente di Electron: `~/.config/NovaTerm` su Linux, `~/Library/Application Support/NovaTerm` su macOS, `%APPDATA%\NovaTerm` su Windows.
 
 ## Non ancora implementato
 
