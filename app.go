@@ -334,7 +334,9 @@ func (a *App) Invoke(channel string, args []json.RawMessage) (any, error) {
 		_, err := a.store.SetSettings(map[string]any{"claudeApiKey": enc})
 		return k != "", err
 	case "dialog:pick-file":
-		var o struct{ Title string `json:"title"` }
+		var o struct {
+			Title string `json:"title"`
+		}
 		_ = arg(0, &o)
 		return a.dlg.OpenFile(o.Title, nil)
 	case "dialog:pick-dir":

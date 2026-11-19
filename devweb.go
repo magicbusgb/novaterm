@@ -49,7 +49,7 @@ func (envDialogs) OpenFiles(string) ([]string, error) {
 	}
 	return strings.Split(p, string(os.PathListSeparator)), err
 }
-func (envDialogs) OpenDir(string) (string, error)                          { return pick("NOVA_PICK_DIR") }
+func (envDialogs) OpenDir(string) (string, error) { return pick("NOVA_PICK_DIR") }
 func (envDialogs) SaveFile(_, _, name string, _ []FileFilter) (string, error) {
 	d, err := pick("NOVA_SAVE_DIR")
 	if d == "" {

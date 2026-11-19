@@ -13,8 +13,8 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
-	goruntime "runtime"
 	"regexp"
+	goruntime "runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -141,7 +141,9 @@ func (m *Manager) List() []map[string]any {
 		list = append(list, t)
 	}
 	m.mu.Unlock()
-	sort.Slice(list, func(i, j int) bool { return list[i].StartedAt < list[j].StartedAt || (list[i].StartedAt == list[j].StartedAt && list[i].ID < list[j].ID) })
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].StartedAt < list[j].StartedAt || (list[i].StartedAt == list[j].StartedAt && list[i].ID < list[j].ID)
+	})
 	out := make([]map[string]any, 0, len(list))
 	for _, t := range list {
 		out = append(out, t.describe())
@@ -366,7 +368,9 @@ func (m *Manager) hostKeyCallback(t *Term, host string, port int) ssh.HostKeyCal
 		if err != nil {
 			return err
 		}
-		var r struct{ Accept bool `json:"accept"` }
+		var r struct {
+			Accept bool `json:"accept"`
+		}
 		_ = json.Unmarshal(raw, &r)
 		if !r.Accept {
 			return errors.New("host key rifiutata")
