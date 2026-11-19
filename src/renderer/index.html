@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="it" data-theme="dark" data-accent="violet">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:" />
+  <title>NovaTerm</title>
+  <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="platform-other">
+    <header class="titlebar">
+      <div class="brand">
+        <div class="logo"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect x="2" y="2" width="28" height="28" rx="8" fill="url(#lg)"/><path d="M9 12l5 4-5 4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 21h6.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+        <span class="brand-name">NovaTerm</span>
+      </div>
+      <div class="quick-connect">
+        <span class="qc-icon" data-icon="zap"></span>
+        <input id="quick-connect" spellcheck="false" placeholder="Connessione rapida: utente@host:porta" />
+        <kbd>Ctrl K</kbd>
+      </div>
+      <div class="toolbar">
+        <button class="tb-btn" data-action="new-session" title="Nuova sessione"><span data-icon="plus"></span><span>Sessione</span></button>
+        <button class="tb-btn" data-action="local-terminal" title="Terminale locale (Ctrl+Shift+T)"><span data-icon="terminal"></span><span>Locale</span></button>
+        <button class="tb-btn" data-action="import-csv" title="Importa CSV"><span data-icon="fileImport"></span><span>Importa CSV</span></button>
+        <button class="tb-btn toggle" data-action="multi-exec" id="btn-multi" title="Multi-esecuzione: digita su più terminali contemporaneamente"><span data-icon="broadcast"></span><span>Multi-exec</span></button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn toggle claude-toggle" data-action="toggle-claude" id="btn-claude" title="Pannello Claude Code (Ctrl+Shift+K)"><span data-icon="sparkles"></span><span>Claude</span></button>
+        <button class="tb-btn icon-only" data-action="settings" title="Impostazioni"><span data-icon="settings"></span></button>
+      </div>
+      <div class="titlebar-spacer"></div>
+    </header>
+
+    <div class="main">
+      <nav class="rail">
+        <button class="rail-btn active" data-pane="sessions" title="Sessioni"><span data-icon="server"></span></button>
+        <button class="rail-btn" data-pane="sftp" title="Browser SFTP"><span data-icon="folder"></span></button>
+        <div class="rail-spacer"></div>
+        <button class="rail-btn" data-action="toggle-sidebar" title="Mostra/nascondi barra laterale"><span data-icon="sidebar"></span></button>
+      </nav>
+
+      <aside class="sidebar" id="sidebar">
+        <section class="pane active" data-pane="sessions">
+          <div class="pane-head">
+            <h3>Sessioni</h3>
+            <div class="pane-actions">
+              <button class="icon-btn" data-action="new-session" title="Nuova sessione"><span data-icon="plus"></span></button>
+              <button class="icon-btn" data-action="import-csv" title="Importa CSV"><span data-icon="fileImport"></span></button>
+              <button class="icon-btn" data-action="sessions-menu" title="Altro"><span data-icon="more"></span></button>
+            </div>
+          </div>
+          <div class="search-box">
+            <span data-icon="search"></span>
+            <input id="session-filter" placeholder="Cerca sessioni..." spellcheck="false" />
+          </div>
+          <div class="session-tree" id="session-tree"></div>
+        </section>
+
+        <section class="pane" data-pane="sftp">
+          <div class="pane-head">
+            <h3>SFTP</h3>
+            <div class="pane-actions">
+              <button class="icon-btn" data-sftp="up" title="Cartella superiore"><span data-icon="arrowUp"></span></button>
+              <button class="icon-btn" data-sftp="home" title="Home"><span data-icon="home"></span></button>
+              <button class="icon-btn" data-sftp="refresh" title="Aggiorna"><span data-icon="refresh"></span></button>
+              <button class="icon-btn" data-sftp="mkdir" title="Nuova cartella"><span data-icon="folderPlus"></span></button>
+              <button class="icon-btn" data-sftp="upload" title="Carica file"><span data-icon="upload"></span></button>
+            </div>
+          </div>
+          <div class="sftp-path"><input id="sftp-path" spellcheck="false" /></div>
+          <div class="sftp-list" id="sftp-list"></div>
+          <div class="sftp-transfers" id="sftp-transfers"></div>
+        </section>
+      </aside>
+      <div class="resizer" data-resize="sidebar"></div>
+
+      <section class="workspace">
+        <div class="tabbar" id="tabbar">
+          <div class="tabs" id="tabs"></div>
+          <button class="icon-btn add-tab" data-action="add-tab-menu" title="Nuova scheda"><span data-icon="plus"></span></button>
+        </div>
+        <div class="multi-banner hidden" id="multi-banner">
+          <span data-icon="broadcast"></span>
+          <span id="multi-banner-text">Multi-esecuzione attiva</span>
+          <button class="link-btn" data-action="multi-exec">Disattiva</button>
+        </div>
+        <div class="term-host" id="term-host"></div>
+        <div class="welcome" id="welcome"></div>
+      </section>
+
+      <div class="resizer" data-resize="claude"></div>
+      <aside class="claude-panel" id="claude-panel">
+        <div class="claude-head">
+          <div class="claude-title">
+            <span class="claude-mark" data-icon="sparkles"></span>
+            <div>
+              <div class="ct-name">Claude Code</div>
+              <div class="ct-sub" id="claude-sub">Pronto</div>
+            </div>
+          </div>
+          <div class="pane-actions">
+            <button class="icon-btn" id="claude-auto" title="Auto-approvazione comandi sui terminali"><span data-icon="shield"></span></button>
+            <button class="icon-btn" data-action="claude-new" title="Nuova conversazione"><span data-icon="edit"></span></button>
+            <button class="icon-btn" data-action="toggle-claude" title="Chiudi pannello"><span data-icon="x"></span></button>
+          </div>
+        </div>
+        <div class="claude-messages" id="claude-messages"></div>
+        <div class="claude-composer">
+          <div class="composer-ctx" id="composer-ctx"></div>
+          <div class="composer-box">
+            <textarea id="claude-input" rows="1" placeholder="Chiedi a Claude di eseguire qualcosa sui tuoi server..." spellcheck="false"></textarea>
+            <button class="send-btn" id="claude-send" title="Invia (Enter)"><span data-icon="send"></span></button>
+          </div>
+          <div class="composer-hint"><span>Enter per inviare · Shift+Enter a capo</span><span id="claude-model-label"></span></div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="statusbar">
+      <div class="sb-left" id="sb-left"></div>
+      <div class="sb-right" id="sb-right"></div>
+    </footer>
+  </div>
+
+  <div id="overlay-root"></div>
+  <div id="toast-root"></div>
+
+  <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+  <script src="../../node_modules/@xterm/addon-search/lib/addon-search.js"></script>
+  <script src="../../node_modules/marked/lib/marked.umd.js"></script>
+  <script src="../../node_modules/dompurify/dist/purify.min.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/themes.js"></script>
+  <script src="js/sessions.js"></script>
+  <script src="js/terminals.js"></script>
+  <script src="js/sftp.js"></script>
+  <script src="js/claude.js"></script>
+  <script src="js/dialogs.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
